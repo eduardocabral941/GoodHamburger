@@ -1,4 +1,5 @@
 ﻿using GoodHamburger.Models;
+using GoodHamburger.Models.DTOs;
 using GoodHamburger.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -51,20 +52,23 @@ namespace GoodHamburger.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public IActionResult AtualizarPedido(int id, [FromBody] List<ItemPedido> itens)
+        public IActionResult AtualizarPedido(int id, [FromBody] List<AtualizarItemPedidoDTO> itemDtos)
         {
-            if (itens.Distinct().Count() != itens.Count)
+            try
             {
-                return BadRequest(new { erro = "Itens duplicados não são permitidos" });
-            }
+                var pedido = _pedidoService.AtualizarPedido(id, itemDtos);
+                if (pedido == null)
+                {
+                    return NotFound(new { erro = "Pedido não encontrado" });
+                }
 
-            var pedido = _pedidoService.AtualizarPedido(id, itens);
-            if (pedido == null)
+                return Ok(new { pedido.PedidoId, pedido.ValorTotal });
+            }
+            catch (InvalidOperationException ex)
             {
-                return NotFound(new { erro = "Pedido não encontrado" });
+                return BadRequest(new { erro = ex.Message });
             }
-
-            return Ok(new { pedido.PedidoId, pedido.ValorTotal });
+            
         }
 
         [HttpDelete("{id:int}")]

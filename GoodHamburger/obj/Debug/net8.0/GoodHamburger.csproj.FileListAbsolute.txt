@@ -228,3 +228,4 @@ C:\dev\GoodHamburger\GoodHamburger\obj\Debug\net8.0\refint\GoodHamburger.dll
 C:\dev\GoodHamburger\GoodHamburger\obj\Debug\net8.0\GoodHamburger.pdb
 C:\dev\GoodHamburger\GoodHamburger\obj\Debug\net8.0\GoodHamburger.genruntimeconfig.cache
 C:\dev\GoodHamburger\GoodHamburger\obj\Debug\net8.0\ref\GoodHamburger.dll
+C:\dev\GoodHamburger\GoodHamburger\obj\Debug\net8.0\GoodHamburger.sourcelink.json

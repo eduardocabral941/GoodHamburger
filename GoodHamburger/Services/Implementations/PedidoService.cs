@@ -1,5 +1,6 @@
 ﻿using GoodHamburger.Data;
 using GoodHamburger.Models;
+using GoodHamburger.Models.DTOs;
 using GoodHamburger.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -61,17 +62,65 @@ namespace GoodHamburger.Services.Implementations
             return _context.Pedidos.Include(n => n.Itens).ToList();
         }
 
-        public Pedido AtualizarPedido(int id, List<ItemPedido> itens)
+        public Pedido AtualizarPedido(int id, List<AtualizarItemPedidoDTO> itemDTO)
         {
+            // Verificar se o pedido existe
             var pedido = _context.Pedidos.Include(p => p.Itens).FirstOrDefault(p => p.PedidoId == id);
             if (pedido == null)
             {
                 return null;
             }
 
+            // Definição dos produtos
+            var produtos = new Dictionary<int, ItemPedido>
+            {
+                { 1, ItemPedido.XBurger },
+                { 2, ItemPedido.XEgg },
+                { 3, ItemPedido.XBacon },
+                { 4, ItemPedido.BatataFrita },
+                { 5, ItemPedido.Refrigerante }
+            };
+
+            // Mapear os DTOs para os itens do pedido
+            var itens = itemDTO.Select(dto =>
+            {
+                if (produtos.TryGetValue(dto.CodProduto, out var produto))
+                {
+                    return new ItemPedido
+                    {
+                        CodProduto = dto.CodProduto,
+                        NomeProduto = produto.NomeProduto,
+                        Quantidade = dto.Quantidade,
+                        Valor = produto.Valor
+                    };
+                }
+                return null;
+            }).ToList();
+
+            // Verificar se algum item mapeado é nulo
+            if (itens.Contains(null))
+            {
+                throw new InvalidOperationException("Produto não encontrado para um dos códigos fornecidos.");
+            }
+
+            // Validar itens duplicados
+            if (itens.Distinct().Count() != itens.Count)
+            {
+                throw new InvalidOperationException("Itens duplicados não são permitidos.");
+            }
+
+            // Validar regras de negócio
+            var resultadoValidacao = ValidarPedido(itens);
+            if (resultadoValidacao != "Pedido válido.")
+            {
+                throw new InvalidOperationException(resultadoValidacao);
+            }
+
+            // Atualizar os itens do pedido
             pedido.Itens = itens;
             pedido.CalcularValorTotal();
             _context.SaveChanges();
+
             return pedido;
         }
 

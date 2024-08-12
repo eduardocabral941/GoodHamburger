@@ -1,4 +1,4 @@
-﻿namespace GoodHamburger.Models
+﻿namespace GoodHamburger.Models.DTOs
 {
     public class ItemPedidoDTO
     {
