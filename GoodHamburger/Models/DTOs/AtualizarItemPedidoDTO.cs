@@ -2,7 +2,7 @@
 {
     public class AtualizarItemPedidoDTO
     {
-        public int CodProduto { get; set; }
+        public int ProductCode { get; set; }
         public int Quantidade { get; set; }
     }
 }

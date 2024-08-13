@@ -25,9 +25,9 @@ namespace GoodHamburger.Services.Implementations
                 { 4, ItemPedido.BatataFrita },
                 { 5, ItemPedido.Refrigerante }
             };
-             
+
             var resultadoValidacao = ValidarPedido(itens);
-            if (resultadoValidacao != "Pedido válido")
+            if (!string.IsNullOrEmpty(resultadoValidacao))
             {
                 throw new InvalidOperationException(resultadoValidacao);
             }
@@ -64,14 +64,12 @@ namespace GoodHamburger.Services.Implementations
 
         public Pedido AtualizarPedido(int id, List<AtualizarItemPedidoDTO> itemDTO)
         {
-            // Verificar se o pedido existe
             var pedido = _context.Pedidos.Include(p => p.Itens).FirstOrDefault(p => p.PedidoId == id);
             if (pedido == null)
             {
                 return null;
             }
 
-            // Definição dos produtos
             var produtos = new Dictionary<int, ItemPedido>
             {
                 { 1, ItemPedido.XBurger },
@@ -81,14 +79,13 @@ namespace GoodHamburger.Services.Implementations
                 { 5, ItemPedido.Refrigerante }
             };
 
-            // Mapear os DTOs para os itens do pedido
             var itens = itemDTO.Select(dto =>
             {
-                if (produtos.TryGetValue(dto.CodProduto, out var produto))
+                if (produtos.TryGetValue(dto.ProductCode, out var produto))
                 {
                     return new ItemPedido
                     {
-                        CodProduto = dto.CodProduto,
+                        CodProduto = dto.ProductCode,
                         NomeProduto = produto.NomeProduto,
                         Quantidade = dto.Quantidade,
                         Valor = produto.Valor
@@ -97,27 +94,20 @@ namespace GoodHamburger.Services.Implementations
                 return null;
             }).ToList();
 
-            // Verificar se algum item mapeado é nulo
             if (itens.Contains(null))
             {
                 throw new InvalidOperationException("Produto não encontrado para um dos códigos fornecidos.");
             }
 
-            // Validar itens duplicados
-            if (itens.Distinct().Count() != itens.Count)
-            {
-                throw new InvalidOperationException("Itens duplicados não são permitidos.");
-            }
-
-            // Validar regras de negócio
             var resultadoValidacao = ValidarPedido(itens);
-            if (resultadoValidacao != "Pedido válido.")
+            if (!string.IsNullOrEmpty(resultadoValidacao))
             {
                 throw new InvalidOperationException(resultadoValidacao);
             }
 
-            // Atualizar os itens do pedido
-            pedido.Itens = itens;
+            pedido.Itens.Clear();
+            pedido.Itens.AddRange(itens);
+
             pedido.CalcularValorTotal();
             _context.SaveChanges();
 
@@ -153,13 +143,13 @@ namespace GoodHamburger.Services.Implementations
                 { "refrigerente", 0 }
             };
 
-            foreach(var item in pedido)
+            foreach (var item in pedido)
             {
                 foreach (var categoria in categorias)
                 {
                     if (categoria.Value.Contains(item.CodProduto))
                     {
-                        contacategoria[categoria.Key] += 1;
+                        contacategoria[categoria.Key]++;
                     }
                 }
             }
@@ -171,7 +161,8 @@ namespace GoodHamburger.Services.Implementations
                     return $"O pedido não pode conter mais de um item da categoria {categoria.Key}";
                 }
             }
-            return "Pedido válido";
+
+            return string.Empty;
         }
     }
 }

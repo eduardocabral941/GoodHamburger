@@ -2,6 +2,7 @@
 using GoodHamburger.Models.DTOs;
 using GoodHamburger.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace GoodHamburger.Controllers
 {
@@ -17,6 +18,9 @@ namespace GoodHamburger.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesDefaultResponseType]
         public IActionResult EnviarPedido([FromBody] List<ItemPedidoDTO> itemIds)
         {
             try
@@ -28,19 +32,18 @@ namespace GoodHamburger.Controllers
                 }).ToList();
 
                 var pedido = _pedidoService.CriarPedido(itens);
-                return Ok(new { pedido.PedidoId, pedido.ValorTotal });
+                return CreatedAtAction(nameof(EnviarPedido), new { id = pedido.PedidoId }, new { pedido.PedidoId, pedido.ValorTotal });
             }
             catch (InvalidOperationException e)
-            {
-                return BadRequest(new { erro = e.Message });
-            }
-            catch (ArgumentException e)
             {
                 return BadRequest(new { erro = e.Message });
             }
         }
 
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesDefaultResponseType]
         public IActionResult ListarPedidos()
         {
             if(!_pedidoService.ListarPedidos().Any())
@@ -52,6 +55,10 @@ namespace GoodHamburger.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesDefaultResponseType]
         public IActionResult AtualizarPedido(int id, [FromBody] List<AtualizarItemPedidoDTO> itemDtos)
         {
             try
@@ -72,6 +79,9 @@ namespace GoodHamburger.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesDefaultResponseType]
         public IActionResult RemoverPedido(int id)
         {
             var sucesso = _pedidoService.RemoverPedido(id);
